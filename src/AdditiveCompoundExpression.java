@@ -1,5 +1,8 @@
 public class AdditiveCompoundExpression extends AbstractCompoundExpression {
 
+    /**
+     * Create a new AdditiveCompoundExpression with the "+" operator
+     */
     AdditiveCompoundExpression() {
         super("+");
     }
@@ -11,7 +14,8 @@ public class AdditiveCompoundExpression extends AbstractCompoundExpression {
      * @return the deep copy
      */
     public Expression deepCopy() {
-        //
-        return null;
+        CompoundExpression clone = new AdditiveCompoundExpression();
+        copyChildren(clone);
+        return clone;
     }
 }

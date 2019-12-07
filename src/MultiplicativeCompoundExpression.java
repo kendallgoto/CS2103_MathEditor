@@ -1,9 +1,11 @@
 public class MultiplicativeCompoundExpression extends AbstractCompoundExpression {
 
+    /**
+     * Create a new MultiplicativeCompoundExpression with the "*" operator
+     */
     MultiplicativeCompoundExpression() {
         super("*");
     }
-
     /**
      * Creates and returns a deep copy of the expression.
      * The entire tree rooted at the target node is copied, i.e.,
@@ -11,8 +13,9 @@ public class MultiplicativeCompoundExpression extends AbstractCompoundExpression
      *
      * @return the deep copy
      */
-    @Override
     public Expression deepCopy() {
-        return null;
+        CompoundExpression clone = new MultiplicativeCompoundExpression();
+        copyChildren(clone);
+        return clone;
     }
 }

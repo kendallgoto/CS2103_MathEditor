@@ -96,8 +96,14 @@ public class ExpressionParserPartialTester {
 		final String parseTreeStr = "()\n\t+\n\t\tx\n\t\t()\n\t\t\tx\n\t\t()\n\t\t\t+\n\t\t\t\tx\n\t\t\t\tx\n\t\tx\n";
 		assertEquals(parseTreeStr, _parser.parse(expressionStr, false).convertToString(0));
 	}
+	@Test
+	public void test4 () throws ExpressionParseException {
+		final String expressionStr = "((((x+(((((((((((((x)))))))))))))+(((((x+x)))))+x))))";
+		final String parseTreeStr = "()\n\t+\n\t\tx\n\t\t()\n\t\t\tx\n\t\t()\n\t\t\t+\n\t\t\t\tx\n\t\t\t\tx\n\t\tx\n";
+		assertEquals(parseTreeStr, _parser.parse(expressionStr, false).convertToString(0));
+	}
 
-	@Test(expected = ExpressionParseException.class) 
+	@Test(expected = ExpressionParseException.class)
 	/**
 	 * Verifies that a specific expression is parsed into the correct parse tree.
 	 */
@@ -106,7 +112,7 @@ public class ExpressionParserPartialTester {
 		_parser.parse(expressionStr, false);
 	}
 
-	@Test(expected = ExpressionParseException.class) 
+	@Test(expected = ExpressionParseException.class)
 	/**
 	 * Verifies that a specific expression is parsed into the correct parse tree.
 	 */
@@ -115,7 +121,7 @@ public class ExpressionParserPartialTester {
 		_parser.parse(expressionStr, false);
 	}
 
-	@Test(expected = ExpressionParseException.class) 
+	@Test(expected = ExpressionParseException.class)
 	/**
 	 * Verifies that a specific expression is parsed into the correct parse tree.
 	 */
@@ -123,4 +129,34 @@ public class ExpressionParserPartialTester {
 		final String expressionStr = "()()";
 		_parser.parse(expressionStr, false);
 	}
+	@Test(expected = ExpressionParseException.class)
+	public void testException4 () throws ExpressionParseException {
+		final String expressionStr = "";
+		_parser.parse(expressionStr, false);
+	}
+
+//	@Test
+	/**
+	 * Verifies that a specific expression is parsed into the correct parse tree.
+	 */
+//	public void testDeepClone () throws ExpressionParseException {
+//		final String expressionStr = "(3+x*2*(9+z+x)*3)*2+36";
+//		Expression parsed = _parser.parse(expressionStr, false);
+//		Expression cloned = parsed.deepCopy();
+//		assertEquals(parsed.convertToString(0), cloned.convertToString(0));
+//		LinkedList<Expression> check_source = new LinkedList<>();
+//		LinkedList<Expression> check_cloned = new LinkedList<>();
+//		check_source.add(parsed);
+//		check_cloned.add(cloned);
+//		while(check_source.size() > 0) {
+//			Expression natural = check_source.pop();
+//			Expression duplicate = check_cloned.pop();
+//			assertNotEquals(natural.hashCode(), duplicate.hashCode());
+//			if(natural instanceof AbstractCompoundExpression) {
+//				check_source.addAll(((AbstractCompoundExpression) natural).getSubexpressions());
+//				check_cloned.addAll(((AbstractCompoundExpression) duplicate).getSubexpressions());
+//			}
+//		}
+//	}
+
 }

@@ -36,6 +36,11 @@ interface Expression {
 	 */	
 	void convertToString (StringBuilder stringBuilder, int indentLevel);
 
+	/**
+	 * Creates a String representation by recursively printing out (using indentation) the
+	 * tree represented by this expression, starting at the specified indentation level.
+	 * Includes a new string builder if it doesn't exist.
+	 */
 	public default String convertToString (int indentLevel) {
 		final StringBuilder stringBuilder = new StringBuilder();
 		convertToString(stringBuilder, indentLevel);

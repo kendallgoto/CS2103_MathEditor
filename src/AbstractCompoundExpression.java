@@ -4,10 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class AbstractCompoundExpression implements CompoundExpression {
-    List<Expression> children = new ArrayList<>();
-    CompoundExpression parent;
-    String operation = "";
+    private List<Expression> children = new ArrayList<>();
+    private CompoundExpression parent;
+    private String operation = "";
 
+    /**
+     * Given a string representing a mathematical operation (*, +, ()), creates a new compound expression
+     * @param operation
+     */
     AbstractCompoundExpression(String operation) {
         this.operation = operation;
     }
@@ -21,7 +25,11 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
         subexpression.setParent(this);
     }
 
-    public List<Expression> getSubexpressions() {
+    /**
+     * Get children sub expressions
+     * @return children
+     */
+    private List<Expression> getSubexpressions() {
         return children;
     }
 
@@ -42,9 +50,6 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
     public void setParent(CompoundExpression parent) {
         this.parent = parent;
     }
-//    Implement in sub classes.
-//    public Expression deepCopy() {
-//    }
 
     /**
      * Recursively flattens the expression as much as possible
@@ -70,6 +75,16 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
         children = newChildren;
     }
 
+    /**
+     * Copy this compound expressions to a defined compound expression
+     * @param copyTo compound expression to copy to
+     */
+    protected void copyChildren(CompoundExpression copyTo) {
+        List<Expression> newChildren = new ArrayList<>();
+        for(Expression child : children) {
+                copyTo.addSubexpression(child.deepCopy());
+        }
+    }
     /**
      * Creates a String representation by recursively printing out (using indentation) the
      * tree represented by this expression, starting at the specified indentation level.

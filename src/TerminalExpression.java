@@ -6,6 +6,11 @@ public class TerminalExpression implements Expression {
     private CompoundExpression parent;
     boolean isValid = true;
 
+    /**
+     * Given a string value, determine if this is a numeric or symbolic literal
+     * Differentiating these two doesn't seem useful in the requirements of this program, but it could be useful for accomplishing symbolic solves.
+     * @param value
+     */
     TerminalExpression(String value) {
         stringValue = value;
         if (value.matches("\\d+")) {
