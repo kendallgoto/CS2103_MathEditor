@@ -1,3 +1,6 @@
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 /**
  * Starter code to implement an ExpressionParser. Your parser methods should use the following grammar:
  * E := A | X
@@ -32,31 +35,32 @@ public class SimpleExpressionParser implements ExpressionParser {
 		return parseAddition(str);
 	}
 
-	private Expression parseAddition(String input) {
-		for(int i = 1; i < input.length() -1; i++) {
-			if(input.charAt(i) == '+' &&
-					parseAddition(input.substring(0, i)) != null &&
-					parseMultiplication(input.substring(i+1)) != null) {
-				CompoundExpression result = new AdditiveCompoundExpression();
-				result.addSubexpression(parseAddition(input.substring(0, i)));
-				result.addSubexpression(parseMultiplication(input.substring(i+1)));
+	private Expression parseSymbol(String input, char target, Supplier<CompoundExpression> newExp, Function<String, Expression> firstHalf, Function<String, Expression> secondHalf) {
+		for(int i = input.indexOf(target); i < input.length() - 1 && i > 0; i = input.indexOf(target, i+1)) {
+			Expression firstExp = firstHalf.apply(input.substring(0, i));
+			Expression secondExp = secondHalf.apply(input.substring(i+1));
+			if(	firstExp != null && secondExp != null) {
+				CompoundExpression result = newExp.get();
+				result.addSubexpression(firstExp);
+				result.addSubexpression(secondExp);
 				return result;
 			}
 		}
-		return parseMultiplication(input);
+		return secondHalf.apply(input);
 	}
-	private Expression parseMultiplication(String input) {
-		for(int i = 1; i < input.length() -1; i++) {
-			if(input.charAt(i) == '*' &&
-					parseMultiplication(input.substring(0, i)) != null &&
-					parseParenthetical(input.substring(i+1)) != null) {
-				CompoundExpression result = new MultiplicativeCompoundExpression();
-				result.addSubexpression(parseMultiplication(input.substring(0, i)));
-				result.addSubexpression(parseParenthetical(input.substring(i+1)));
-				return result;
-			}
-		}
-		return parseParenthetical(input);
+	private Expression parseAddition(String input) {
+		return parseSymbol(input, '+',
+				AdditiveCompoundExpression::new,
+				this::parseAddition,
+				this::parseMultiplication
+		);
+	}
+		private Expression parseMultiplication(String input) {
+		return parseSymbol(input, '*',
+				MultiplicativeCompoundExpression::new,
+				this::parseMultiplication,
+				this::parseParenthetical
+				);
 	}
 	private Expression parseParenthetical(String input) {
 		if(input.length() >= 3) {
