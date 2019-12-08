@@ -29,7 +29,7 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
      * Get children sub expressions
      * @return children
      */
-    private List<Expression> getSubexpressions() {
+    List<Expression> getSubexpressions() {
         return children;
     }
 
@@ -59,15 +59,18 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
      * c itself will be removed. This method modifies the expression itself.
      */
     public void flatten() {
-        List<Expression> newChildren = new ArrayList<>();
+        final List<Expression> newChildren = new ArrayList<>();
         for(Expression child : children) {
             //Flatten ahead first
             child.flatten();
             //Is this child also the same operation as we are?
             if(child.getClass() == this.getClass()) {
-                //Merge
+                //Merge + adjust new parent
                 AbstractCompoundExpression compoundChild = (AbstractCompoundExpression) child;
-                newChildren.addAll(compoundChild.getSubexpressions());
+                for(Expression subChild : compoundChild.getSubexpressions()) {
+                    newChildren.add(subChild);
+                    subChild.setParent(this);
+                }
             } else {
                 newChildren.add(child);
             }
@@ -80,7 +83,7 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
      * @param copyTo compound expression to copy to
      */
     protected void copyChildren(CompoundExpression copyTo) {
-        List<Expression> newChildren = new ArrayList<>();
+        final List<Expression> newChildren = new ArrayList<>();
         for(Expression child : children) {
                 copyTo.addSubexpression(child.deepCopy());
         }

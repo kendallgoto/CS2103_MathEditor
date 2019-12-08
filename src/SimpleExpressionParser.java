@@ -20,7 +20,7 @@ public class SimpleExpressionParser implements ExpressionParser {
 	public Expression parse (String str, boolean withJavaFXControls) throws ExpressionParseException {
 		// Remove spaces -- this simplifies the parsing logic
 		str = str.replaceAll(" ", "");
-		Expression expression = parseExpression(str);
+		final Expression expression = parseExpression(str);
 		if (expression == null) {
 			// If we couldn't parse the string, then raise an error
 			throw new ExpressionParseException("Cannot parse expression: " + str);
@@ -51,10 +51,10 @@ public class SimpleExpressionParser implements ExpressionParser {
 	 */
 	private Expression parseSymbol(String input, char target, Supplier<CompoundExpression> newExp, Function<String, Expression> firstHalf, Function<String, Expression> secondHalf) {
 		for(int i = input.indexOf(target); i < input.length() - 1 && i > 0; i = input.indexOf(target, i+1)) {
-			Expression firstExp = firstHalf.apply(input.substring(0, i));
-			Expression secondExp = secondHalf.apply(input.substring(i+1));
+			final Expression firstExp = firstHalf.apply(input.substring(0, i));
+			final Expression secondExp = secondHalf.apply(input.substring(i+1));
 			if(	firstExp != null && secondExp != null) {
-				CompoundExpression result = newExp.get();
+				final CompoundExpression result = newExp.get();
 				result.addSubexpression(firstExp);
 				result.addSubexpression(secondExp);
 				return result;
@@ -94,9 +94,9 @@ public class SimpleExpressionParser implements ExpressionParser {
 	 */
 	private Expression parseParenthetical(String input) {
 		if(input.length() >= 3) {
-			char firstChar = input.charAt(0);
-			char lastChar = input.charAt(input.length() - 1);
-			String midSection = input.substring(1, input.length() - 1);
+			final char firstChar = input.charAt(0);
+			final char lastChar = input.charAt(input.length() - 1);
+			final String midSection = input.substring(1, input.length() - 1);
 			if (firstChar == '(' && lastChar == ')' && parseAddition(midSection) != null) {
 				CompoundExpression result = new ParentheticalCompoundExpression();
 				result.addSubexpression(parseAddition(midSection));
@@ -111,7 +111,7 @@ public class SimpleExpressionParser implements ExpressionParser {
 	 * @return Expression representing input or null.
 	 */
 	private Expression parseTerminal(String input) {
-		TerminalExpression result = new TerminalExpression(input);
+		final TerminalExpression result = new TerminalExpression(input);
 		if(result.isValid)
 			return result;
 		return null;

@@ -102,6 +102,29 @@ public class ExpressionParserPartialTester {
 		final String parseTreeStr = "()\n\t+\n\t\tx\n\t\t()\n\t\t\tx\n\t\t()\n\t\t\t+\n\t\t\t\tx\n\t\t\t\tx\n\t\tx\n";
 		assertEquals(parseTreeStr, _parser.parse(expressionStr, false).convertToString(0));
 	}
+	@Test
+	public void ensureParent () throws ExpressionParseException {
+		String expressionStr = "3*(((x*2*((((3+x)))))))+2*y*(x+3+y+x*2*2+3)+3";
+		Expression tree = _parser.parse(expressionStr, false);
+		testRecursive(tree);
+		expressionStr = "(x+(x)+(x+x)+x)";
+		tree = _parser.parse(expressionStr, false);
+		testRecursive(tree);
+		expressionStr = "1+2+3";
+		tree = _parser.parse(expressionStr, false);
+		testRecursive(tree);
+	}
+	private void testRecursive(Expression root) {
+		System.out.println("Expanding "+root.toString());
+		if(root instanceof AbstractCompoundExpression) {
+			AbstractCompoundExpression abs = (AbstractCompoundExpression) root;
+			for(Expression child : abs.getSubexpressions()) {
+				assertEquals(child.getParent(), root);
+				System.out.println("Got parent "+child.getParent().toString()+ " from child "+child.toString());
+				testRecursive(child);
+			}
+		}
+	}
 
 	@Test(expected = ExpressionParseException.class)
 	/**

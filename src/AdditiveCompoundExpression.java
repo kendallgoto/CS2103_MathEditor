@@ -14,7 +14,7 @@ public class AdditiveCompoundExpression extends AbstractCompoundExpression {
      * @return the deep copy
      */
     public Expression deepCopy() {
-        CompoundExpression clone = new AdditiveCompoundExpression();
+        final CompoundExpression clone = new AdditiveCompoundExpression();
         copyChildren(clone);
         return clone;
     }
