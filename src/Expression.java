@@ -1,14 +1,36 @@
+import javafx.geometry.Bounds;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.Node;
+
 interface Expression {
+	/**
+	 * Border for showing a focused expression
+	 */
+	public static final Border RED_BORDER = new Border(
+	  new BorderStroke(Color.RED, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)
+	);
+
+	/**
+	 * Border for showing a non-focused expression
+	 */
+	public static final Border NO_BORDER = null;
+
+	/**
+	 * Color used for a "ghosted" expression
+	 */
+	public static final Color GHOST_COLOR = Color.LIGHTGREY;
+
 	/**
 	 * Returns the expression's parent.
 	 * @return the expression's parent
 	 */
 	CompoundExpression getParent ();
-
+        
 	/**
-	 * Sets the parent be the specified expression.
-	 * @param parent the CompoundExpression that should be the parent of the target object
-	 */
+         * Sets the parent be the specified expression.
+         * @param parent the CompoundExpression that should be the parent of the target object
+         */
 	void setParent (CompoundExpression parent);
 
 	/**
@@ -19,6 +41,13 @@ interface Expression {
 	 */
 	Expression deepCopy ();
 
+
+	/**
+	 * Returns the JavaFX node associated with this expression.
+	 * @return the JavaFX node associated with this expression.
+	 */
+	Node getNode ();
+
 	/**
 	 * Recursively flattens the expression as much as possible
 	 * throughout the entire tree. Specifically, in every multiplicative
@@ -28,6 +57,8 @@ interface Expression {
 	 */
 	void flatten ();
 
+	Bounds computeBounds();
+
 	/**
 	 * Creates a String representation by recursively printing out (using indentation) the
 	 * tree represented by this expression, starting at the specified indentation level.
@@ -36,11 +67,6 @@ interface Expression {
 	 */	
 	void convertToString (StringBuilder stringBuilder, int indentLevel);
 
-	/**
-	 * Creates a String representation by recursively printing out (using indentation) the
-	 * tree represented by this expression, starting at the specified indentation level.
-	 * Includes a new string builder if it doesn't exist.
-	 */
 	public default String convertToString (int indentLevel) {
 		final StringBuilder stringBuilder = new StringBuilder();
 		convertToString(stringBuilder, indentLevel);
@@ -58,4 +84,15 @@ interface Expression {
 			stringBuilder.append('\t');
 		}
 	}
+
+	public default void setGhost(boolean ghost) {
+		if(ghost) {
+			getNode().setOpacity(0.5);
+		} else {
+			getNode().setOpacity(1);
+		}
+	}
+	Expression findGhost();
+
+	Expression deepCopyWithPlacement(int placement, Expression search) throws NoMoreCombinationsException;
 }

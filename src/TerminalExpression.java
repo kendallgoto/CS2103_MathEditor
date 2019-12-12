@@ -1,3 +1,8 @@
+import javafx.geometry.BoundingBox;
+import javafx.geometry.Bounds;
+import javafx.scene.Node;
+import javafx.scene.control.Label;
+
 public class TerminalExpression implements Expression {
     private boolean isChar = false;
     private int numericValue = 0;
@@ -5,6 +10,7 @@ public class TerminalExpression implements Expression {
     private String stringValue = "";
     private CompoundExpression parent;
     boolean isValid = true;
+    private Label storedNode;
 
     /**
      * Given a string value, determine if this is a numeric or symbolic literal
@@ -22,6 +28,7 @@ public class TerminalExpression implements Expression {
         } else {
             isValid = false;
         }
+        storedNode = new ReferenceLabel(value, this);
     }
     /**
      * Returns the expression's parent.
@@ -50,7 +57,19 @@ public class TerminalExpression implements Expression {
      */
     @Override
     public Expression deepCopy() {
-        return new TerminalExpression(stringValue);
+        TerminalExpression cloned = new TerminalExpression(stringValue);
+        cloned.storedNode.setBorder(storedNode.getBorder());
+        return cloned;
+    }
+
+    /**
+     * Returns the JavaFX node associated with this expression.
+     *
+     * @return the JavaFX node associated with this expression.
+     */
+    @Override
+    public Node getNode() {
+        return storedNode;
     }
 
     /**
@@ -64,6 +83,10 @@ public class TerminalExpression implements Expression {
         //you can't flatten a terminal
     }
 
+    public Bounds computeBounds() {
+        return this.getNode().localToScene(this.getNode().getBoundsInLocal());
+    }
+
     /**
      * Creates a String representation by recursively printing out (using indentation) the
      * tree represented by this expression, starting at the specified indentation level.
@@ -75,5 +98,15 @@ public class TerminalExpression implements Expression {
     public void convertToString(StringBuilder stringBuilder, int indentLevel) {
        Expression.indent(stringBuilder, indentLevel);
        stringBuilder.append(stringValue).append("\n");
+    }
+    public Expression findGhost() {
+        if(this.getNode().getOpacity() == 0.5)
+            return this;
+        return null;
+    }
+
+    @Override
+    public Expression deepCopyWithPlacement(int placement, Expression search) {
+        return deepCopy();
     }
 }

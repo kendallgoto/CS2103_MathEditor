@@ -28,6 +28,11 @@ public class SimpleExpressionParser implements ExpressionParser {
 
 		// Flatten the expression before returning
 		expression.flatten();
+		//Add signs
+		if(expression instanceof AbstractCompoundExpression) {
+			AbstractCompoundExpression absExpression = (AbstractCompoundExpression)expression;
+			absExpression.addSigns();
+		}
 		return expression;
 	}
 

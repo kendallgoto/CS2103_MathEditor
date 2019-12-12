@@ -13,9 +13,7 @@ public class ParentheticalCompoundExpression extends AbstractCompoundExpression 
      *
      * @return the deep copy
      */
-    public Expression deepCopy() {
-        final CompoundExpression clone = new ParentheticalCompoundExpression();
-        copyChildren(clone);
-        return clone;
+    public AbstractCompoundExpression createSelf() {
+        return new ParentheticalCompoundExpression();
     }
 }
