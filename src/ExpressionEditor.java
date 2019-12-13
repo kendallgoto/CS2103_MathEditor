@@ -11,6 +11,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 
+import java.util.Arrays;
+
 public class ExpressionEditor extends Application {
 	public static void main (String[] args) {
 		launch(args);
@@ -22,110 +24,108 @@ public class ExpressionEditor extends Application {
 	private static class MouseEventHandler implements EventHandler<MouseEvent> {
 		private Pane pane;
 		private AbstractCompoundExpression root;
-		private double ini_x, ini_y;
+
 		private Expression focused;
+
+		private double ini_x, ini_y;
 		private Expression floatingClone;
 		private boolean dragging = false;
 		private boolean didDrag = false;
 		private AbstractCompoundExpression[] dragPermutations;
 		private AbstractCompoundExpression lastSeenPermutation;
+
 		MouseEventHandler (Pane pane_, AbstractCompoundExpression rootExpression_) {
 			pane = pane_;
 			root = rootExpression_;
 			focused = root;
 		}
-
 		public void handle (MouseEvent event) {
-			if (event.getEventType() == MouseEvent.MOUSE_PRESSED) {
-				if(focused == root) {
-					return;
-				}
-				ini_x = event.getSceneX();
-				ini_y = event.getSceneY();
-				if(!focused.computeBounds().contains(ini_x, ini_y))
-					return;
-
-				dragging = true;
-				didDrag = false;
-				//clone!
-
-			} else if (event.getEventType() == MouseEvent.MOUSE_DRAGGED) {
-				if(dragging) {
-					if(!didDrag) {
-						floatingClone = focused.deepCopy();
-						Bounds sceneBoundsOfFocused = focused.computeBounds();
-						Bounds paneBoundsOfFocused = pane.sceneToLocal(sceneBoundsOfFocused);
-						floatingClone.getNode().setLayoutX(paneBoundsOfFocused.getMinX());
-						floatingClone.getNode().setLayoutY(paneBoundsOfFocused.getMinY());
-						((Region)floatingClone.getNode()).setBorder(Expression.NO_BORDER);
-						pane.getChildren().add(floatingClone.getNode());
-
-						//Generate potential "alternative configurations"
-
-						dragPermutations = root.buildPermutations(focused);
-						System.out.println(dragPermutations);
-						double closestDistance = Integer.MAX_VALUE;
-						for(AbstractCompoundExpression possibility : dragPermutations) {
-							Node possibility_node = possibility.getNode();
-							possibility_node.setLayoutX(WINDOW_WIDTH/4);
-							possibility_node.setLayoutY(WINDOW_HEIGHT/2);
-							possibility_node.setOpacity(0);
-							pane.getChildren().add(possibility_node);
-							Node ghostingNode = possibility.findGhost().getNode();
-							double distance = calculateDistance(floatingClone.getNode(), ghostingNode);
-							if(distance < closestDistance) {
-								closestDistance = distance;
-								lastSeenPermutation = possibility;
-							}
-						}
-						pane.getChildren().remove(root.getNode()); //Remove our actual original root since we generate it as a possibility.
-						if(lastSeenPermutation != null) //should **never** be null
-							lastSeenPermutation.getNode().setOpacity(1);
-					}
-					didDrag = true;
-					floatingClone.getNode().setTranslateX(event.getSceneX() - ini_x);
-					floatingClone.getNode().setTranslateY(event.getSceneY() - ini_y);
-
-					double closestDistance = Integer.MAX_VALUE;
-					for(AbstractCompoundExpression possibility : dragPermutations) {
-						Node possibility_node = possibility.getNode();
-						possibility_node.setOpacity(0);
-						Node ghostingNode = possibility.findGhost().getNode();
-						double distance = calculateDistance(floatingClone.getNode(), ghostingNode);
-						if(distance < closestDistance) {
-							closestDistance = distance;
-							lastSeenPermutation = possibility;
-						}
-					}
-					lastSeenPermutation.getNode().setOpacity(1);
-				}
-
-			} else if (event.getEventType() == MouseEvent.MOUSE_RELEASED) {
-				if(dragging && didDrag) {
-					dropFocused();
-					return;
-				}
-				System.out.println("Pressed at ("+event.getX()+", "+event.getY()+")");
-				if(focused != null)
-					((Region)focused.getNode()).setBorder(Expression.NO_BORDER);
-				//Find our focus
-				if(focused instanceof AbstractCompoundExpression) {
-					AbstractCompoundExpression casted = (AbstractCompoundExpression) focused;
-					Expression newFocus = casted.focusDeeper(event.getSceneX(), event.getSceneY());
-					if(focused == newFocus) focused = root;
-					else focused = newFocus;
-				}
-				else if(focused instanceof TerminalExpression) {
-					//we're clicking onto a terminal. just unfocus
-					focused = root;
-				}
-				if(focused == null) focused = root;
-				if(focused != root) {
-					((Region) focused.getNode()).setBorder(Expression.RED_BORDER);
-				}
-			}
+			if (event.getEventType() == MouseEvent.MOUSE_PRESSED)
+				handlePress(event);
+			else if (event.getEventType() == MouseEvent.MOUSE_DRAGGED)
+				handleDrag(event);
+			else if (event.getEventType() == MouseEvent.MOUSE_RELEASED)
+				handleRelease(event);
 		}
 
+		private void handlePress(MouseEvent event) {
+			if(focused == root || focused == null) {
+				return;
+			}
+			ini_x = event.getSceneX();
+			ini_y = event.getSceneY();
+			if(!focused.computeBounds().contains(ini_x, ini_y))
+				return;
+
+			dragging = true;
+			didDrag = false;
+		}
+		private void handleDrag(MouseEvent event) {
+			if(dragging && focused != root) {
+				if (!didDrag)
+					initialDragSetup();
+				floatingClone.getNode().setTranslateX(event.getSceneX() - ini_x);
+				floatingClone.getNode().setTranslateY(event.getSceneY() - ini_y);
+				double closestDistance = Integer.MAX_VALUE;
+				for (AbstractCompoundExpression possibility : dragPermutations) {
+					Node possibility_node = possibility.getNode();
+					if(!didDrag) {
+						possibility_node.setLayoutX(WINDOW_WIDTH / 4);
+						possibility_node.setLayoutY(WINDOW_HEIGHT / 2);
+						pane.getChildren().add(possibility_node);
+
+						pane.applyCss();
+						pane.layout(); // Force getChildren() to update early in order to calculate ghost's bounds
+						// on the same tick as adding to getChildren()
+					}
+					possibility_node.setOpacity(0);
+					Node ghostingNode = possibility.findGhost().getNode();
+					double distance = calculateDistance(floatingClone.getNode(), ghostingNode);
+					if (distance < closestDistance) {
+						closestDistance = distance;
+						lastSeenPermutation = possibility;
+					}
+				}
+				didDrag = true;
+				lastSeenPermutation.getNode().setOpacity(1);
+			}
+		}
+		private void handleRelease(MouseEvent event) {
+			if(dragging && didDrag) {
+				dropFocused();
+				return;
+			}
+			if(focused != null)
+				((Region)focused.getNode()).setBorder(Expression.NO_BORDER);
+			//Find our focus
+			if(focused instanceof AbstractCompoundExpression) {
+				AbstractCompoundExpression casted = (AbstractCompoundExpression) focused;
+				Expression newFocus = casted.focusDeeper(event.getSceneX(), event.getSceneY());
+				if(focused == newFocus) focused = root;
+				else focused = newFocus;
+			}
+			else if(focused instanceof TerminalExpression) {
+				//we're clicking onto a terminal. just unfocus
+				focused = root;
+			}
+			if(focused == null) focused = root;
+			if(focused != root) {
+				((Region) focused.getNode()).setBorder(Expression.RED_BORDER);
+			}
+		}
+		private void initialDragSetup() {
+			floatingClone = focused.deepCopy();
+			Bounds sceneBoundsOfFocused = focused.computeBounds();
+			Bounds paneBoundsOfFocused = pane.sceneToLocal(sceneBoundsOfFocused);
+			floatingClone.getNode().setLayoutX(paneBoundsOfFocused.getMinX());
+			floatingClone.getNode().setLayoutY(paneBoundsOfFocused.getMinY());
+			((Region) floatingClone.getNode()).setBorder(Expression.NO_BORDER);
+			pane.getChildren().add(floatingClone.getNode());
+
+			//Generate potential "alternative configurations"
+			dragPermutations = root.buildPermutations(focused);
+			pane.getChildren().remove(root.getNode()); //Remove our actual original root since we generate it as a possibility.
+		}
 		private double calculateDistance(Node node, Node ghostingNode) {
 			Bounds firstNode = node.localToScene(node.getBoundsInLocal());
 			Bounds secondNode = ghostingNode.localToScene(ghostingNode.getBoundsInLocal());
@@ -138,13 +138,15 @@ public class ExpressionEditor extends Application {
 
 		private void dropFocused() {
 			dragging = false;
-			pane.getChildren().remove(floatingClone.getNode());
+			didDrag = false;
+			System.out.println("locking "+lastSeenPermutation);
 			//lock us into a new configuration
 			pane.getChildren().clear();
 			pane.getChildren().add(lastSeenPermutation.getNode());
 			lastSeenPermutation.findGhost().setGhost(false);
 			focused = lastSeenPermutation.findFocus();
 			root = lastSeenPermutation;
+			System.out.println(root.convertToString(0));
 		}
 	}
 
@@ -182,7 +184,6 @@ public class ExpressionEditor extends Application {
 			try {
 				// Success! Add the expression's Node to the expressionPane
 				final Expression expression = expressionParser.parse(textField.getText(), true);
-				System.out.println(expression.convertToString(0));
 				expressionPane.getChildren().clear();
 				expressionPane.getChildren().add(expression.getNode());
 				expression.getNode().setLayoutX(WINDOW_WIDTH/4);

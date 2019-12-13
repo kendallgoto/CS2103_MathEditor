@@ -5,7 +5,7 @@ public class ReferenceLabel extends Label {
     public ReferenceLabel(String label, Expression expr) {
         super(label);
         this.expr = expr;
-        this.setStyle("-fx-font: 24 arial;");
+        this.setStyle("-fx-font: 30 \"serif\"; -fx-font-weight: bold;");
     }
     public Expression getExpression() {
         return expr;

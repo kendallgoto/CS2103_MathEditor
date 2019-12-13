@@ -11,6 +11,7 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
     private CompoundExpression parent;
     private String operation = "";
     final private HBox storedNode;
+    private boolean signsUpToDate = false;
     /**
      * Given a string representing a mathematical operation (*, +, ()), creates a new compound expression
      * @param operation
@@ -28,6 +29,7 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
         children.add(subexpression);
         subexpression.setParent(this);
         storedNode.getChildren().add(subexpression.getNode());
+        signsUpToDate = false;
     }
 
     /**
@@ -60,23 +62,26 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
      * Runs whenever our HBox changes in order to insert signs between symbols or parentheses around the entire thing
      */
     public void addSigns() {
+        if(signsUpToDate)
+            return;
         final List<Node> children = storedNode.getChildren();
         if(operation.equals("()")) {
             children.add(0, new ReferenceLabel("(", null));
             children.add(new ReferenceLabel(")", null));
         }
-        System.out.println(Arrays.toString(children.toArray()));
         for(Expression subExp : getSubexpressions()) {
             if(subExp instanceof AbstractCompoundExpression) {
                 ((AbstractCompoundExpression) subExp).addSigns();
             }
             if(!operation.equals("()")) {
                 Node nodeForExp = subExp.getNode();
-                int index = storedNode.getChildren().indexOf(nodeForExp);
-                if (index > 0)
-                    storedNode.getChildren().add(index, new ReferenceLabel(operation, null));
+                int index = children.indexOf(nodeForExp);
+                if (index > 0) {
+                    children.add(index, new ReferenceLabel(operation, null));
+                }
             }
         }
+        signsUpToDate = true;
     }
 
     public Bounds computeBounds() {
@@ -118,6 +123,7 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
             }
         }
         children = newChildren;
+        signsUpToDate = false;
     }
     abstract AbstractCompoundExpression createSelf();
 
@@ -169,8 +175,6 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
         //find child that contains x, y.
         for(Expression c : children) {
             Bounds box = c.computeBounds();
-            System.out.println("Checking for children at ("+mouseX+", "+mouseY+")");
-            System.out.println("Against bounds "+box);
             if(box.contains(mouseX, mouseY)) {
                 return c;
             }
@@ -194,6 +198,8 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
     }
     public Expression deepCopyWithPlacement(int placement, Expression search) throws NoMoreCombinationsException {
         final AbstractCompoundExpression clone = createSelf();
+        HBox clonedNode = (HBox)clone.getNode();
+        clonedNode.setBorder(((HBox)getNode()).getBorder());
         final List<Expression> reorderedChildren = new ArrayList<>(children);
         if(children.contains(search)) {
             if(placement >= children.size())
