@@ -10,6 +10,7 @@ import java.util.function.Supplier;
  * L := [0-9]+ | [a-z]
  */
 public class SimpleExpressionParser implements ExpressionParser {
+	private boolean withJavaControls;
 	/**
 	 * Attempts to create an expression tree -- flattened as much as possible -- from the specified String.
          * Throws a ExpressionParseException if the specified string cannot be parsed.
@@ -19,6 +20,7 @@ public class SimpleExpressionParser implements ExpressionParser {
 	 */
 	public Expression parse (String str, boolean withJavaFXControls) throws ExpressionParseException {
 		// Remove spaces -- this simplifies the parsing logic
+		withJavaControls = withJavaFXControls;
 		str = str.replaceAll(" ", "");
 		final Expression expression = parseExpression(str);
 		if (expression == null) {
@@ -75,7 +77,7 @@ public class SimpleExpressionParser implements ExpressionParser {
 	 */
 	private Expression parseAddition(String input) {
 		return parseSymbol(input, '+',
-				AdditiveCompoundExpression::new,
+				() -> new AdditiveCompoundExpression(withJavaControls),
 				this::parseAddition,
 				this::parseMultiplication
 		);
@@ -87,7 +89,7 @@ public class SimpleExpressionParser implements ExpressionParser {
 	 */
 	private Expression parseMultiplication(String input) {
 		return parseSymbol(input, '*',
-				MultiplicativeCompoundExpression::new,
+				() -> new MultiplicativeCompoundExpression(withJavaControls),
 				this::parseMultiplication,
 				this::parseParenthetical
 				);
@@ -103,7 +105,7 @@ public class SimpleExpressionParser implements ExpressionParser {
 			final char lastChar = input.charAt(input.length() - 1);
 			final String midSection = input.substring(1, input.length() - 1);
 			if (firstChar == '(' && lastChar == ')' && parseAddition(midSection) != null) {
-				CompoundExpression result = new ParentheticalCompoundExpression();
+				CompoundExpression result = new ParentheticalCompoundExpression(withJavaControls);
 				result.addSubexpression(parseAddition(midSection));
 				return result;
 			}
@@ -116,7 +118,7 @@ public class SimpleExpressionParser implements ExpressionParser {
 	 * @return Expression representing input or null.
 	 */
 	private Expression parseTerminal(String input) {
-		final TerminalExpression result = new TerminalExpression(input);
+		final TerminalExpression result = new TerminalExpression(input, withJavaControls);
 		if(result.isValid)
 			return result;
 		return null;

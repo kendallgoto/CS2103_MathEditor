@@ -17,11 +17,6 @@ interface Expression {
 	public static final Border NO_BORDER = null;
 
 	/**
-	 * Color used for a "ghosted" expression
-	 */
-	public static final Color GHOST_COLOR = Color.LIGHTGREY;
-
-	/**
 	 * Returns the expression's parent.
 	 * @return the expression's parent
 	 */

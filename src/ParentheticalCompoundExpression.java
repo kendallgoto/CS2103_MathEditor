@@ -1,10 +1,13 @@
 public class ParentheticalCompoundExpression extends AbstractCompoundExpression {
 
+    final private boolean withJavaControls;
     /**
      * Create a new ParentheticalCompoundExpression with the "()" operator
+     * @param withJavaControls enables on-screen Node creation
      */
-    ParentheticalCompoundExpression() {
-        super("()");
+    ParentheticalCompoundExpression(boolean withJavaControls) {
+        super("()", withJavaControls);
+        this.withJavaControls = withJavaControls;
     }
 
     /**
@@ -12,6 +15,6 @@ public class ParentheticalCompoundExpression extends AbstractCompoundExpression 
      * @return an instance of ParentheticalCompoundExpression
      */
     public AbstractCompoundExpression createSelf() {
-        return new ParentheticalCompoundExpression();
+        return new ParentheticalCompoundExpression(withJavaControls);
     }
 }

@@ -10,6 +10,7 @@ public class TerminalExpression implements Expression {
     private String stringValue = "";
     private CompoundExpression parent;
     boolean isValid = true;
+    final private boolean withJavaControls;
     final private Label storedNode;
 
     /**
@@ -17,8 +18,10 @@ public class TerminalExpression implements Expression {
      * Differentiating these two doesn't seem useful in the requirements of this program, but it could be useful for accomplishing symbolic solves, etc.
      * @param value String representation of this terminal
      */
-    TerminalExpression(String value) {
+    TerminalExpression(String value, boolean withJavaControls) {
         stringValue = value;
+        this.withJavaControls = withJavaControls;
+
         if (value.matches("\\d+")) {
             numericValue = Integer.parseInt(value);
         } else if (value.length() == 1 && value.matches("[a-z]")) {
@@ -28,7 +31,10 @@ public class TerminalExpression implements Expression {
         } else {
             isValid = false;
         }
-        storedNode = new ReferenceLabel(value, this);
+        if(withJavaControls)
+            storedNode = new ReferenceLabel(value, this);
+        else
+            storedNode = null;
     }
     /**
      * Returns the expression's parent.
@@ -57,8 +63,9 @@ public class TerminalExpression implements Expression {
      */
     @Override
     public Expression deepCopy() {
-        final TerminalExpression cloned = new TerminalExpression(stringValue);
-        cloned.storedNode.setBorder(storedNode.getBorder());
+        final TerminalExpression cloned = new TerminalExpression(stringValue, withJavaControls);
+        if(withJavaControls)
+            cloned.storedNode.setBorder(storedNode.getBorder());
         return cloned;
     }
 
@@ -100,7 +107,9 @@ public class TerminalExpression implements Expression {
        stringBuilder.append(stringValue).append("\n");
     }
     public Expression findGhost() {
-        if(this.getNode().getOpacity() == 0.5)
+        if(!withJavaControls)
+            return null;
+        if(storedNode.getOpacity() == 0.5)
             return this;
         return null;
     }

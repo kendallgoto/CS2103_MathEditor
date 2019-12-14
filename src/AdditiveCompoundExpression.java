@@ -2,16 +2,19 @@ public class AdditiveCompoundExpression extends AbstractCompoundExpression {
 
     /**
      * Create a new AdditiveCompoundExpression with the "+" operator
+     * @param withJavaControls enable onscreen Node creation
      */
-    AdditiveCompoundExpression() {
-        super("+");
+    final private boolean withJavaControls;
+    AdditiveCompoundExpression(boolean withJavaControls) {
+        super("+", withJavaControls);
+        this.withJavaControls = withJavaControls;
     }
     /**
      * Constructs an instance of this object
      * @return an instance of AdditiveCompoundExpression
      */
     public AbstractCompoundExpression createSelf() {
-        return new AdditiveCompoundExpression();
+        return new AdditiveCompoundExpression(withJavaControls);
     }
 
 }

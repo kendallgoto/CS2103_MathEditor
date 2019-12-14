@@ -12,14 +12,18 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
     final private String operation;
     final private HBox storedNode;
     private boolean signsUpToDate = false;
-
+    final private boolean withJavaControls;
     /**
      * Given a string representing a mathematical operation (*, +, ()), creates a new compound expression
      * @param operation
      */
-    AbstractCompoundExpression(String operation) {
+    AbstractCompoundExpression(String operation, boolean withJavaControls) {
         this.operation = operation;
-        storedNode = new HBox();
+        this.withJavaControls = withJavaControls;
+        if(withJavaControls)
+            storedNode = new HBox();
+        else
+            storedNode = null;
     }
     /**
      * Adds the specified expression as a child.
@@ -29,7 +33,8 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
     public void addSubexpression(Expression subexpression) {
         children.add(subexpression);
         subexpression.setParent(this);
-        storedNode.getChildren().add(subexpression.getNode());
+        if(withJavaControls)
+            storedNode.getChildren().add(subexpression.getNode());
         signsUpToDate = false;
     }
 
@@ -63,6 +68,8 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
      * Runs whenever our HBox changes in order to insert signs between symbols or parentheses around the entire thing
      */
     public void addSigns() {
+        if(!withJavaControls)
+            return;
         if(signsUpToDate)
             return;
         final List<Node> children = storedNode.getChildren();
@@ -90,6 +97,8 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
      * @return scene-relative bounds
      */
     public Bounds computeBounds() {
+        if(!withJavaControls)
+            return null;
         return this.getNode().localToScene(this.getNode().getBoundsInLocal());
     }
     /**
@@ -109,7 +118,8 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
      */
     public void flatten() {
         final List<Expression> newChildren = new ArrayList<>();
-        storedNode.getChildren().clear();
+        if(withJavaControls)
+            storedNode.getChildren().clear();
         for(Expression child : children) {
             //Flatten ahead first
             child.flatten();
@@ -120,11 +130,13 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
                 for(Expression subChild : compoundChild.getSubexpressions()) {
                     newChildren.add(subChild);
                     subChild.setParent(this);
-                    storedNode.getChildren().add(subChild.getNode());
+                    if(withJavaControls)
+                        storedNode.getChildren().add(subChild.getNode());
                 }
             } else {
                 newChildren.add(child);
-                storedNode.getChildren().add(child.getNode());
+                if(withJavaControls)
+                    storedNode.getChildren().add(child.getNode());
             }
         }
         children = newChildren;
@@ -239,14 +251,15 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
      */
     public Expression deepCopyWithPlacement(int placement, Expression search) throws NoMoreCombinationsException {
         final AbstractCompoundExpression clone = createSelf();
-        final HBox clonedNode = (HBox)clone.getNode();
-        clonedNode.setBorder(((HBox)getNode()).getBorder());
+        if(withJavaControls) {
+            final HBox clonedNode = (HBox) clone.getNode();
+            clonedNode.setBorder(((HBox) getNode()).getBorder());
+        }
         final List<Expression> reorderedChildren = new ArrayList<>(children);
         if(children.contains(search)) {
             if(placement >= children.size())
                 throw new NoMoreCombinationsException("No more combinations remain!"); //Will be caught by permutations array assembler
             //Move our clone of "search" into the correct slot
-            int originalIndex = reorderedChildren.indexOf(search);
             reorderedChildren.remove(search);
             reorderedChildren.add(placement, search);
         }
@@ -265,7 +278,9 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
      */
     public Expression findGhost() {
         //Find our ghosting expression in here ...
-        if(this.getNode().getOpacity() == 0.5)
+        if(!withJavaControls)
+            return null;
+        if(storedNode.getOpacity() == 0.5)
             return this;
         for(Expression c : children) {
             Expression ghost = c.findGhost();
