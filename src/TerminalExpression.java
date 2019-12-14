@@ -10,12 +10,12 @@ public class TerminalExpression implements Expression {
     private String stringValue = "";
     private CompoundExpression parent;
     boolean isValid = true;
-    private Label storedNode;
+    final private Label storedNode;
 
     /**
      * Given a string value, determine if this is a numeric or symbolic literal
      * Differentiating these two doesn't seem useful in the requirements of this program, but it could be useful for accomplishing symbolic solves, etc.
-     * @param value
+     * @param value String representation of this terminal
      */
     TerminalExpression(String value) {
         stringValue = value;
@@ -57,7 +57,7 @@ public class TerminalExpression implements Expression {
      */
     @Override
     public Expression deepCopy() {
-        TerminalExpression cloned = new TerminalExpression(stringValue);
+        final TerminalExpression cloned = new TerminalExpression(stringValue);
         cloned.storedNode.setBorder(storedNode.getBorder());
         return cloned;
     }

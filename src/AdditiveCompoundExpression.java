@@ -7,11 +7,8 @@ public class AdditiveCompoundExpression extends AbstractCompoundExpression {
         super("+");
     }
     /**
-     * Creates and returns a deep copy of the expression.
-     * The entire tree rooted at the target node is copied, i.e.,
-     * the copied Expression is as deep as possible.
-     *
-     * @return the deep copy
+     * Constructs an instance of this object
+     * @return an instance of AdditiveCompoundExpression
      */
     public AbstractCompoundExpression createSelf() {
         return new AdditiveCompoundExpression();

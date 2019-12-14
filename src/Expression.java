@@ -57,6 +57,10 @@ interface Expression {
 	 */
 	void flatten ();
 
+	/**
+	 * Calculates the scene-relative bounds of this expression.
+	 * @return scene-relative bounds
+	 */
 	Bounds computeBounds();
 
 	/**
@@ -76,7 +80,7 @@ interface Expression {
 	/**
 	 * Static helper method to indent a specified number of times from the left margin, by
 	 * appending tab characters to the specified StringBuilder.
-	 * @param sb the StringBuilder to which to append tab characters.
+	 * @param stringBuilder the StringBuilder to which to append tab characters.
 	 * @param indentLevel the number of tabs to append.
 	 */
 	public static void indent (StringBuilder stringBuilder, int indentLevel) {
@@ -85,6 +89,10 @@ interface Expression {
 		}
 	}
 
+	/**
+	 * Set this expression to be "ghosting" or at half opacity.
+	 * @param ghost true if ghosting should be enabled (half opacity)
+	 */
 	public default void setGhost(boolean ghost) {
 		if(ghost) {
 			getNode().setOpacity(0.5);
@@ -92,7 +100,19 @@ interface Expression {
 			getNode().setOpacity(1);
 		}
 	}
+
+	/**
+	 * Finds the currently "ghosting" expression block in this expression (if it exists)
+	 * @return Ghost expression
+	 */
 	Expression findGhost();
 
+	/**
+	 * Deep copies this expression, reordering a searched element in it's parent's subexpression list.
+	 * @param placement An index to move the search element to in its parent
+	 * @param search A search element to copy and change throughout the copy
+	 * @return A deep copy with the "search" element to be the placement-th's child of its parent.
+	 * @throws NoMoreCombinationsException if there is no possible arrangement given a placement value
+	 */
 	Expression deepCopyWithPlacement(int placement, Expression search) throws NoMoreCombinationsException;
 }

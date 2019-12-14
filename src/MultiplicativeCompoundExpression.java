@@ -6,6 +6,11 @@ public class MultiplicativeCompoundExpression extends AbstractCompoundExpression
     MultiplicativeCompoundExpression() {
         super("*");
     }
+
+    /**
+     * Constructs an instance of this object
+     * @return an instance of MultiplicativeCompoundExpression
+     */
     public AbstractCompoundExpression createSelf() {
         return new MultiplicativeCompoundExpression();
     }

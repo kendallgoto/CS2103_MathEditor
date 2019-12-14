@@ -1,17 +1,11 @@
 import javafx.application.Application;
-
-import javafx.geometry.Bounds;
-import javafx.geometry.Point2D;
+import javafx.geometry.*;
 import javafx.event.EventHandler;
-import javafx.scene.Scene;
+import javafx.scene.*;
 import javafx.scene.layout.*;
-import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
-
-import java.util.Arrays;
 
 public class ExpressionEditor extends Application {
 	public static void main (String[] args) {
@@ -22,7 +16,7 @@ public class ExpressionEditor extends Application {
 	 * Mouse event handler for the entire pane that constitutes the ExpressionEditor
 	 */
 	private static class MouseEventHandler implements EventHandler<MouseEvent> {
-		private Pane pane;
+		final private Pane pane;
 		private AbstractCompoundExpression root;
 
 		private Expression focused;
@@ -39,6 +33,11 @@ public class ExpressionEditor extends Application {
 			root = rootExpression_;
 			focused = root;
 		}
+
+		/**
+		 * Handles mouse events by dividing labour based on press, drag, release
+		 * @param event MouseEvent with a click, drag, or release
+		 */
 		public void handle (MouseEvent event) {
 			if (event.getEventType() == MouseEvent.MOUSE_PRESSED)
 				handlePress(event);
@@ -48,6 +47,10 @@ public class ExpressionEditor extends Application {
 				handleRelease(event);
 		}
 
+		/**
+		 * Handles the "on-click" action by seeing if we need to take measurements to start dragging
+		 * @param event MouseEvent describing the user action.
+		 */
 		private void handlePress(MouseEvent event) {
 			if(focused == root || focused == null) {
 				return;
@@ -60,6 +63,11 @@ public class ExpressionEditor extends Application {
 			dragging = true;
 			didDrag = false;
 		}
+
+		/**
+		 * Handles the "drag" action by moving the floating node if it exists, and updating the ghost
+		 * @param event MouseEvent describing the user action.
+		 */
 		private void handleDrag(MouseEvent event) {
 			if(dragging && focused != root) {
 				if (!didDrag)
@@ -68,7 +76,7 @@ public class ExpressionEditor extends Application {
 				floatingClone.getNode().setTranslateY(event.getSceneY() - ini_y);
 				double closestDistance = Integer.MAX_VALUE;
 				for (AbstractCompoundExpression possibility : dragPermutations) {
-					Node possibility_node = possibility.getNode();
+					final Node possibility_node = possibility.getNode();
 					if(!didDrag) {
 						possibility_node.setLayoutX(WINDOW_WIDTH / 4);
 						possibility_node.setLayoutY(WINDOW_HEIGHT / 2);
@@ -79,7 +87,7 @@ public class ExpressionEditor extends Application {
 						// on the same tick as adding to getChildren()
 					}
 					possibility_node.setOpacity(0);
-					Node ghostingNode = possibility.findGhost().getNode();
+					final Node ghostingNode = possibility.findGhost().getNode();
 					double distance = calculateDistance(floatingClone.getNode(), ghostingNode);
 					if (distance < closestDistance) {
 						closestDistance = distance;
@@ -90,6 +98,11 @@ public class ExpressionEditor extends Application {
 				lastSeenPermutation.getNode().setOpacity(1);
 			}
 		}
+
+		/**
+		 * Handle mouse "release" action by adjusting focus if necessary, or dropping the expression if we were dragging.
+		 * @param event MouseEvent describing the user action.
+		 */
 		private void handleRelease(MouseEvent event) {
 			if(dragging && didDrag) {
 				dropFocused();
@@ -99,8 +112,8 @@ public class ExpressionEditor extends Application {
 				((Region)focused.getNode()).setBorder(Expression.NO_BORDER);
 			//Find our focus
 			if(focused instanceof AbstractCompoundExpression) {
-				AbstractCompoundExpression casted = (AbstractCompoundExpression) focused;
-				Expression newFocus = casted.focusDeeper(event.getSceneX(), event.getSceneY());
+				final AbstractCompoundExpression casted = (AbstractCompoundExpression) focused;
+				final Expression newFocus = casted.focusDeeper(event.getSceneX(), event.getSceneY());
 				if(focused == newFocus) focused = root;
 				else focused = newFocus;
 			}
@@ -113,10 +126,15 @@ public class ExpressionEditor extends Application {
 				((Region) focused.getNode()).setBorder(Expression.RED_BORDER);
 			}
 		}
+
+		/**
+		 * Sets up the initial drag process by cloning our node and making it "float"
+		 * Additionally calculates permutations possible by moving our node.
+		 */
 		private void initialDragSetup() {
 			floatingClone = focused.deepCopy();
-			Bounds sceneBoundsOfFocused = focused.computeBounds();
-			Bounds paneBoundsOfFocused = pane.sceneToLocal(sceneBoundsOfFocused);
+			final Bounds sceneBoundsOfFocused = focused.computeBounds();
+			final Bounds paneBoundsOfFocused = pane.sceneToLocal(sceneBoundsOfFocused);
 			floatingClone.getNode().setLayoutX(paneBoundsOfFocused.getMinX());
 			floatingClone.getNode().setLayoutY(paneBoundsOfFocused.getMinY());
 			((Region) floatingClone.getNode()).setBorder(Expression.NO_BORDER);
@@ -126,20 +144,29 @@ public class ExpressionEditor extends Application {
 			dragPermutations = root.buildPermutations(focused);
 			pane.getChildren().remove(root.getNode()); //Remove our actual original root since we generate it as a possibility.
 		}
+
+		/**
+		 * Calculates the distance between two nodes' center.
+		 * @param node The first node to calculate distance from
+		 * @param ghostingNode The second node to calculate distance to
+		 * @return a Double describing the distance.
+		 */
 		private double calculateDistance(Node node, Node ghostingNode) {
-			Bounds firstNode = node.localToScene(node.getBoundsInLocal());
-			Bounds secondNode = ghostingNode.localToScene(ghostingNode.getBoundsInLocal());
-			Point2D firstCenter = new Point2D((firstNode.getMinX() + firstNode.getMaxX()) / 2, (firstNode.getMinY() + firstNode.getMaxY()) / 2);
-			Point2D secondCenter = new Point2D((secondNode.getMinX() + secondNode.getMaxX()) / 2, (secondNode.getMinY() + secondNode.getMaxY()) / 2);
-			double xDelta = (firstCenter.getX() - secondCenter.getX());
-			double yDelta = (firstCenter.getY() - secondCenter.getY());
+			final Bounds firstNode = node.localToScene(node.getBoundsInLocal());
+			final Bounds secondNode = ghostingNode.localToScene(ghostingNode.getBoundsInLocal());
+			final Point2D firstCenter = new Point2D((firstNode.getMinX() + firstNode.getMaxX()) / 2, (firstNode.getMinY() + firstNode.getMaxY()) / 2);
+			final Point2D secondCenter = new Point2D((secondNode.getMinX() + secondNode.getMaxX()) / 2, (secondNode.getMinY() + secondNode.getMaxY()) / 2);
+			final double xDelta = (firstCenter.getX() - secondCenter.getX());
+			final double yDelta = (firstCenter.getY() - secondCenter.getY());
 			return Math.sqrt(xDelta * xDelta + yDelta * yDelta);
 		}
 
+		/**
+		 * Handles the action of "dropping" the floating element by locking in the best permutation.
+		 */
 		private void dropFocused() {
 			dragging = false;
 			didDrag = false;
-			System.out.println("locking "+lastSeenPermutation);
 			//lock us into a new configuration
 			pane.getChildren().clear();
 			pane.getChildren().add(lastSeenPermutation.getNode());
@@ -165,7 +192,10 @@ public class ExpressionEditor extends Application {
 	 */
 	private final ExpressionParser expressionParser = new SimpleExpressionParser();
 
-
+	/**
+	 * Renders the main window and hooks listeners.
+	 * @param primaryStage State to draw onto
+	 */
 	@Override
 	public void start (Stage primaryStage) {
 		primaryStage.setTitle("Expression Editor");

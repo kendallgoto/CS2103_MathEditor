@@ -9,9 +9,10 @@ import java.util.List;
 public abstract class AbstractCompoundExpression implements CompoundExpression {
     private List<Expression> children = new ArrayList<>();
     private CompoundExpression parent;
-    private String operation = "";
+    final private String operation;
     final private HBox storedNode;
     private boolean signsUpToDate = false;
+
     /**
      * Given a string representing a mathematical operation (*, +, ()), creates a new compound expression
      * @param operation
@@ -74,7 +75,7 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
                 ((AbstractCompoundExpression) subExp).addSigns();
             }
             if(!operation.equals("()")) {
-                Node nodeForExp = subExp.getNode();
+                final Node nodeForExp = subExp.getNode();
                 int index = children.indexOf(nodeForExp);
                 if (index > 0) {
                     children.add(index, new ReferenceLabel(operation, null));
@@ -84,6 +85,10 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
         signsUpToDate = true;
     }
 
+    /**
+     * Calculates the scene-relative bounds of this expression.
+     * @return scene-relative bounds
+     */
     public Bounds computeBounds() {
         return this.getNode().localToScene(this.getNode().getBoundsInLocal());
     }
@@ -111,7 +116,7 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
             //Is this child also the same operation as we are?
             if(child.getClass() == this.getClass()) {
                 //Merge + adjust new parent
-                AbstractCompoundExpression compoundChild = (AbstractCompoundExpression) child;
+                final AbstractCompoundExpression compoundChild = (AbstractCompoundExpression) child;
                 for(Expression subChild : compoundChild.getSubexpressions()) {
                     newChildren.add(subChild);
                     subChild.setParent(this);
@@ -125,8 +130,19 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
         children = newChildren;
         signsUpToDate = false;
     }
+
+    /**
+     * Allows for sub-types of expressions to be created by this AbstractClass for deep clones.
+     * @return created instance of AbstractCompoundExpression subclass.
+     */
     abstract AbstractCompoundExpression createSelf();
 
+    /**
+     * Creates and returns a deep copy of the expression.
+     * The entire tree rooted at the target node is copied, i.e.,
+     * the copied Expression is as deep as possible.
+     * @return the deep copy
+     */
     public Expression deepCopy() {
         final AbstractCompoundExpression clone = createSelf();
         for(Expression child : children) {
@@ -152,25 +168,36 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
         }
     }
 
+    /**
+     * Determines the currently focused Expression by searching inside of this CompoundExpression.
+     * @return focused Expression
+     */
     public Expression findFocus() {
-        Region self = (Region)getNode();
+        final Region self = (Region)getNode();
         if(self.getBorder() != Expression.NO_BORDER) {
             return this;
         }
         for(Expression child : children) {
-            Node c_node = child.getNode();
-            Region c_region = (Region) c_node;
+            final Node c_node = child.getNode();
+            final Region c_region = (Region) c_node;
             if(c_region.getBorder() != Expression.NO_BORDER)
                 return child;
             if(child instanceof AbstractCompoundExpression) {
-                AbstractCompoundExpression cast_child = (AbstractCompoundExpression)child;
-                Expression searchRecursively = cast_child.findFocus();
+                final AbstractCompoundExpression cast_child = (AbstractCompoundExpression)child;
+                final Expression searchRecursively = cast_child.findFocus();
                 if(searchRecursively != null)
                     return searchRecursively;
             }
         }
         return null;
     }
+
+    /**
+     * See if there's a deeper focus that contains the mouse's position.
+     * @param mouseX Mouse scene-relative X
+     * @param mouseY Mouse scene-relative y
+     * @return A deeper focus if it exists.
+     */
     public Expression focusDeeper(double mouseX, double mouseY) {
         //find child that contains x, y.
         for(Expression c : children) {
@@ -181,8 +208,14 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
         }
         return null;
     }
+
+    /**
+     * Builds each permutation of moving the ghost expression ("search") in its parent.
+     * @param search The ghost expression to move
+     * @return An array of permutations for each possible valid move of Search.
+     */
     public AbstractCompoundExpression[] buildPermutations(Expression search) {
-        ArrayList<AbstractCompoundExpression> permutations = new ArrayList<>();
+        final ArrayList<AbstractCompoundExpression> permutations = new ArrayList<>();
         int placementPerm = -1;
         while(true) {
             placementPerm++;
@@ -192,13 +225,21 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
                 permutations.add(thisPermutation);
             } catch (NoMoreCombinationsException e) { break; }
         }
-        AbstractCompoundExpression[] permutationResult = new AbstractCompoundExpression[permutations.size()];
+        final AbstractCompoundExpression[] permutationResult = new AbstractCompoundExpression[permutations.size()];
         permutations.toArray(permutationResult);
         return permutationResult;
     }
+
+    /**
+     * Deep copies this expression, reordering a searched element in it's parent's subexpression list.
+     * @param placement An index to move the search element to in its parent
+     * @param search A search element to copy and change throughout the copy
+     * @return A deep copy with the "search" element to be the placement-th's child of its parent.
+     * @throws NoMoreCombinationsException if there is no possible arrangement given a placement value
+     */
     public Expression deepCopyWithPlacement(int placement, Expression search) throws NoMoreCombinationsException {
         final AbstractCompoundExpression clone = createSelf();
-        HBox clonedNode = (HBox)clone.getNode();
+        final HBox clonedNode = (HBox)clone.getNode();
         clonedNode.setBorder(((HBox)getNode()).getBorder());
         final List<Expression> reorderedChildren = new ArrayList<>(children);
         if(children.contains(search)) {
@@ -217,6 +258,11 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
         clone.addSigns();
         return clone;
     }
+
+    /**
+     * Recursively scans for a ghosting expression.
+     * @return the ghosting Expression
+     */
     public Expression findGhost() {
         //Find our ghosting expression in here ...
         if(this.getNode().getOpacity() == 0.5)
