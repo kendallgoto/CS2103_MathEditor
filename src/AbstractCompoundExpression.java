@@ -15,7 +15,7 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
     final private boolean withJavaControls;
     /**
      * Given a string representing a mathematical operation (*, +, ()), creates a new compound expression
-     * @param operation
+     * @param operation mathematical operation associated with this abstract
      */
     AbstractCompoundExpression(String operation, boolean withJavaControls) {
         this.operation = operation;
@@ -42,7 +42,7 @@ public abstract class AbstractCompoundExpression implements CompoundExpression {
      * Get children sub expressions
      * @return children
      */
-    List<Expression> getSubexpressions() {
+    public List<Expression> getSubexpressions() {
         return children;
     }
 

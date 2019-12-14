@@ -1,10 +1,11 @@
 public class AdditiveCompoundExpression extends AbstractCompoundExpression {
 
+    final private boolean withJavaControls;
+
     /**
      * Create a new AdditiveCompoundExpression with the "+" operator
      * @param withJavaControls enable onscreen Node creation
      */
-    final private boolean withJavaControls;
     AdditiveCompoundExpression(boolean withJavaControls) {
         super("+", withJavaControls);
         this.withJavaControls = withJavaControls;

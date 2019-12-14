@@ -6,7 +6,7 @@ public class TerminalExpression implements Expression {
     private boolean isChar = false;
     private int numericValue = 0;
     private char characterValue = 0;
-    private String stringValue = "";
+    final private String stringValue;
     private CompoundExpression parent;
     boolean isValid = true;
     final private boolean withJavaControls;
